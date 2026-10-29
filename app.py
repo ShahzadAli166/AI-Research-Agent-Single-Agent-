@@ -1,3 +1,8 @@
+# Workaround for CrewAI's cache_breakpoint bug with Groq
+import crewai.llms.cache as _crewai_cache
+
+_crewai_cache.mark_cache_breakpoint = lambda msg: msg
+
 import os
 import streamlit as st
 from crewai import Agent, Crew, Process, Task, LLM
