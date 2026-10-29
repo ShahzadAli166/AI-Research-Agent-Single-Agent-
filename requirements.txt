@@ -1,0 +1,1 @@
+streamlit>=1.40,<2.0\ncrewai[litellm]==1.15.33\nddgs>=9.0,<10.0\n
