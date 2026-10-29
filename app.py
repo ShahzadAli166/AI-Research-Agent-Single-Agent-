@@ -3,11 +3,15 @@ import crewai.llms.cache as _crewai_cache
 
 _crewai_cache.mark_cache_breakpoint = lambda msg: msg
 
+from io import BytesIO
 import os
+import re
+
 import streamlit as st
 from crewai import Agent, Crew, Process, Task, LLM
 from crewai.tools import tool
 from ddgs import DDGS
+from docx import Document
 
 MODEL_NAME = "groq/openai/gpt-oss-120b"
 
@@ -84,6 +88,36 @@ def build_crew(topic: str, depth_choice: str):
     )
     return Crew(agents=[agent], tasks=[task], process=Process.sequential, verbose=False)
 
+def markdown_to_docx(markdown: str) -> bytes:
+    document = Document()
+
+    for line in markdown.splitlines():
+        stripped = line.strip()
+        if not stripped:
+            continue
+
+        heading = re.match(r"^(#{1,6})\s+(.+)$", stripped)
+        if heading:
+            level = min(len(heading.group(1)), 4)
+            document.add_heading(heading.group(2).strip(), level=level)
+            continue
+
+        bullet = re.match(r"^[-*+]\s+(.+)$", stripped)
+        if bullet:
+            document.add_paragraph(bullet.group(1).strip(), style="List Bullet")
+            continue
+
+        numbered = re.match(r"^\d+[.)]\s+(.+)$", stripped)
+        if numbered:
+            document.add_paragraph(numbered.group(1).strip(), style="List Number")
+            continue
+
+        document.add_paragraph(stripped)
+
+    output = BytesIO()
+    document.save(output)
+    return output.getvalue()
+
 with st.form("research_form"):
     topic = st.text_area("What topic should I research?", placeholder="Example: Current applications of AI agents in manufacturing quality control", height=110)
     submitted = st.form_submit_button("🔍 Research topic", type="primary", use_container_width=True)
@@ -111,7 +145,24 @@ if st.session_state.get("last_report"):
     st.subheader("Research report")
     st.caption(f"Topic: {st.session_state.get('last_topic', '')}")
     st.markdown(st.session_state["last_report"])
-    st.download_button("⬇️ Download report (.md)", data=st.session_state["last_report"], file_name="research_report.md", mime="text/markdown")
+    report = st.session_state["last_report"]
+    col_md, col_docx = st.columns(2)
+    with col_md:
+        st.download_button(
+            "⬇️ Download report (.md)",
+            data=report,
+            file_name="research_report.md",
+            mime="text/markdown",
+            use_container_width=True,
+        )
+    with col_docx:
+        st.download_button(
+            "⬇️ Download report (.docx)",
+            data=markdown_to_docx(report),
+            file_name="research_report.docx",
+            mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+            use_container_width=True,
+        )
 
 st.divider()
 st.caption("AI-generated research can contain errors. Verify important claims against the linked original sources.")

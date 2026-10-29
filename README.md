@@ -38,7 +38,7 @@ Create a key at https://console.groq.com/keys and keep it private.
 1. Enter a research topic.
 2. Select Brief, Standard, or Detailed.
 3. Click **Research topic**.
-4. Review the report and its source links, then optionally download it as Markdown.
+4. Review the report and its source links, then download it as Markdown or a Word document (`.docx`).
 
 ## Notes
 
@@ -46,3 +46,4 @@ Create a key at https://console.groq.com/keys and keep it private.
 - Open the linked sources and verify important claims.
 - The app uses one CrewAI agent, not a multi-agent crew.
 - Streamlit Community Cloud installs dependencies from `requirements.txt`.
+- The Word download converts report headings, paragraphs, bullet lists, and numbered lists from the generated Markdown.
